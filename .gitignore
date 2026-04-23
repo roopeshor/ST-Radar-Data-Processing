@@ -3,3 +3,4 @@ Data/*
 reader/*.so
 .vscode
 Read_rawfile.m
+**/__pycache__

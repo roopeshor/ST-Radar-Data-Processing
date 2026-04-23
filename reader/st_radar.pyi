@@ -4,189 +4,269 @@ Python bindings for ST Radar raw data parser
 from __future__ import annotations
 __all__: list[str] = ['BeamObject', 'RawBeamHeader', 'read_data']
 class BeamObject:
+    """
+    Extended structure to hold both header and the 3D data block
+    """
     @property
     def BeamData(self) -> list[list[list[complex]]]:
-        ...
+        """
+        Beam Data Dimensions: [inCohIntegrations][rangeBins][FFTPoints]
+        """
     @property
-    def cfg(self) -> RawBeamHeader:
-        ...
+    def header(self) -> RawBeamHeader:
+        """
+        Beam Header data
+        """
 class RawBeamHeader:
+    """
+    732 byte Beam header
+    """
     @property
-    def m_cArrRemarks(self) -> int:
+    def FFTPoints(self) -> int:
         """
-        ASCII strings for operator notes and experiment naming. 
-        """
-    @property
-    def m_cComment(self) -> str:
-        """
-        ASCII strings for operator notes and experiment naming. 
+        Number of points in the Fast Fourier Transform. Determines the velocity (Doppler) resolution of the final spectra. Formally: m_sNFFT
         """
     @property
-    def m_cReserved(self) -> int:
+    def IIP_us(self) -> float:
         """
-        placeholders for future software updates. 
-        """
-    @property
-    def m_fAltitude(self) -> float:
-        """
-        Geographic Altitude 
+        (IPP): Inter-Pulse Period. The time between consecutive transmitted pulses. It determines the maximum unambiguous range (Rmax​=c⋅IPP/2) and the maximum measurable Doppler velocity (Nyquist limit). Formally: m_fIntrPulsePeriod_us
         """
     @property
-    def m_fAzimuth(self) -> float:
+    def MGC_Gain_dB(self) -> float:
         """
-        The azimuthal pointing direction of the current beam.
-        """
-    @property
-    def m_fBaudLength_us(self) -> float:
-        """
-        If the pulse is phase-coded (compressed), the pulse is divided into smaller "bauds" or "chips". The baud length dictates the actual range resolution (ΔR=c⋅baud/2), while the longer total pulse width maintains high average power.
+        Manual Gain Control in dB. The analog amplification applied to the receiver chain before ADC conversion to prevent saturation from ground clutter.
         """
     @property
-    def m_fIntrPulsePeriod_us(self) -> float:
+    def PMCodeA(self) -> list[int]:
         """
-        (IPP): Inter-Pulse Period. The time between consecutive transmitted pulses. It determines the maximum unambiguous range (Rmax​=c⋅IPP/2) and the maximum measurable Doppler velocity (Nyquist limit).
-        """
-    @property
-    def m_fLatitude(self) -> float:
-        """
-        Geographic latitude 
+        The actual binary sequences used for phase modulation. Radars often use complementary code pairs (Code A and Code B) transmitted on alternating pulses to cancel out range sidelobes perfectly. Formally: m_ulCodeA
         """
     @property
-    def m_fLongitude(self) -> float:
+    def PMCodeB(self) -> list[int]:
         """
-        Geographic Longitude 
-        """
-    @property
-    def m_fMGC_Gain_dB(self) -> float:
-        """
-        Manual Gain Control. The analog amplification applied to the receiver chain before ADC conversion to prevent saturation from ground clutter.
+        The actual binary sequences used for phase modulation. Radars often use complementary code pairs (Code A and Code B) transmitted on alternating pulses to cancel out range sidelobes perfectly. Formally: m_ulCodeB
         """
     @property
-    def m_fOffZenith(self) -> float:
-        """
-        The off-zeneith pointing direction of the current beam. Off-Zenith is the elevation angle relative to straight up (usually around 10° to 15° for ST atmospheric profiling).
-        """
-    @property
-    def m_fPulseWidth_us(self) -> float:
-        """
-        The total duration of the transmitted RF pulse. Dictates the total transmitted energy.
-        """
-    @property
-    def m_fRadiatedPower_ClusterWise(self) -> list[float]:
-        """
-        The ACARR radar array is divided into sub-arrays or "clusters" of antennas. This array tracks the power output of each specific hardware cluster for diagnostics and beam-forming calibration.
-        """
-    @property
-    def m_fTRP_RF_Delay_us(self) -> float:
+    def TRP_RF_Delay_us(self) -> float:
         """
         Transmit/Receive Path Delay. The internal hardware time it takes for the signal to travel through cables, T/R switches, and filters. This must be subtracted from the time-of-flight to accurately calculate "Altitude Zero".
         """
     @property
-    def m_fTotalPowerRadiated(self) -> float:
+    def altitude(self) -> float:
         """
-        Total transmit power. 
-        """
-    @property
-    def m_fWindow1StartHeight(self) -> float:
-        """
-        The altitude boundaries (in km or meters) for up to 5 disjoint observation windows 
+        Geographic Altitude 
         """
     @property
-    def m_sCodeFlag(self) -> int:
+    def azimuth(self) -> float:
         """
-        A boolean/integer flag indicating whether phase coding (pulse compression) is enabled.
-        """
-    @property
-    def m_sCurrentBeamCnt(self) -> int:
-        """
-        Tracks the current scan beam cycle ST radars typically operate in DBS (Doppler Beam Swinging) mode, cycling through several beam directions (e.g., Zenith, North, East, South, West) to resolve the 3D wind vector.
+        The azimuthal pointing direction of the current beam.
         """
     @property
-    def m_sNFFT(self) -> int:
+    def baudLength_us(self) -> float:
         """
-        Number of points in the Fast Fourier Transform. Determines the velocity (Doppler) resolution of the final spectra.
-        """
-    @property
-    def m_sNumOfCohIntegrations(self) -> int:
-        """
-        Coherent Integrations. The number of raw I/Q voltage samples summed together before the FFT. This dramatically improves Signal-to-Noise Ratio (SNR) for slow-moving atmospheric targets and acts as a low-pass filter, reducing the effective sampling rate.
+        If the pulse is phase-coded (compressed), the pulse is divided into smaller "bauds" or "chips". The baud length dictates the actual range resolution (ΔR=c⋅baud/2), while the longer total pulse width maintains high average power.
         """
     @property
-    def m_sNumOfInCohIntegrations(self) -> int:
+    def beamCount(self) -> int:
+        """
+        Number of beams ST radars typically operate in DBS (Doppler Beam Swinging) mode, cycling through several beam directions (e.g., Zenith, North, East, South, West) to resolve the 3D wind vector. formally: m_sTotalNumberofBeams
+        """
+    @property
+    def clusterWiseRadiatedPower(self) -> list[float]:
+        """
+        The ACARR radar array is divided into sub-arrays or "clusters" of antennas. This array tracks the power output of each specific hardware cluster for diagnostics and beam-forming calibration. formally: m_fRadiatedPower_ClusterWise
+        """
+    @property
+    def codeLength(self) -> int:
+        """
+        number of bits in the phase code. Unsigned 16-bit code. Formally: m_usCodeLength
+        """
+    @property
+    def comment(self) -> str:
+        """
+        ASCII strings for operator notes and experiment naming. 
+        """
+    @property
+    def currentBeamCount(self) -> int:
+        """
+        Tracks the current scan beam cycle ST radars typically operate in DBS (Doppler Beam Swinging) mode, cycling through several beam directions (e.g., Zenith, North, East, South, West) to resolve the 3D wind vector. formally: m_sCurrentBeamCnt
+        """
+    @property
+    def dayCaptured(self) -> int:
+        """
+        Day in which this coherent integration block was captured Formally: m_sDay
+        """
+    @property
+    def experimentDataEnabled(self) -> int:
+        """
+        Flag distinguishing between actual atmospheric measurement runs and internal hardware calibration/noise-floor sampling. Formally: m_ucExperimentDataEnable
+        """
+    @property
+    def hourCaptured(self) -> int:
+        """
+        Hour in which first pulse in this specific coherent integration block was captured Formally: m_sHour
+        """
+    @property
+    def inCohIntegrations(self) -> int:
         """
         Incoherent Integrations. The number of power spectra (magnitudes) averaged together after the FFT. This does not change resolution but smooths the noise floor, making weak atmospheric echoes easier to detect.
         """
     @property
-    def m_sNumOfObservWindows(self) -> int:
+    def latitude(self) -> float:
         """
-        The radar can be programmed to only record specific altitude blocks to save bandwidth (e.g., sampling the troposphere, skipping the empty stratosphere, and sampling the mesosphere).
-        """
-    @property
-    def m_sNumOfRangeBins(self) -> int:
-        """
-        The total number of altitude slices (gates) sampled along the beam path.
+        Geographic latitude 
         """
     @property
-    def m_sOperationMode(self) -> int:
+    def longitude(self) -> float:
+        """
+        Geographic Longitude 
+        """
+    @property
+    def minCaptured(self) -> int:
+        """
+        Min in which first pulse in this specific coherent integration block was captured Formally: m_sMin
+        """
+    @property
+    def monthCaptured(self) -> int:
+        """
+        Month in which this coherent integration block was captured Formally: m_sMonth
+        """
+    @property
+    def numOfCohIntegrations(self) -> int:
+        """
+        Coherent Integrations. The number of raw I/Q voltage samples summed together before the FFT. This dramatically improves Signal-to-Noise Ratio (SNR) for slow-moving atmospheric targets and acts as a low-pass filter, reducing the effective sampling rate.
+        """
+    @property
+    def numOfObservedWindows(self) -> int:
+        """
+        The radar can be programmed to only record specific altitude blocks to save bandwidth (e.g., sampling the troposphere, skipping the empty stratosphere, and sampling the mesosphere). formally: m_sNumOfObservWindows
+        """
+    @property
+    def offZenith(self) -> float:
+        """
+        The off-zeneith pointing direction of the current beam. Off-Zenith is the elevation angle relative to straight up (usually around 10° to 15° for ST atmospheric profiling).
+        """
+    @property
+    def operationMode(self) -> int:
         """
         Identifier for the operational mode (e.g., DBS wind profiling, spaced-antenna drift, meteor tracking).
         """
     @property
-    def m_sReserved1(self) -> int:
+    def phaseCodingEnabled(self) -> int:
+        """
+        A boolean/integer flag indicating whether phase coding (pulse compression) is enabled. Formally: m_sCodeFlag
+        """
+    @property
+    def pulseWidth_us(self) -> float:
+        """
+        The total duration of the transmitted RF pulse. Dictates the total transmitted energy. formally:  m_fPulseWidth_us
+        """
+    @property
+    def rangeBins(self) -> int:
+        """
+        732 byte Beam header */ struct RawBeamHeader { int16_t fileMagicNumber; /** The total number of altitude slices (gates) sampled along the beam path.
+        """
+    @property
+    def remarks(self) -> list[int]:
+        """
+        ASCII strings for operator notes and experiment naming. Formally: m_cArrRemarks
+        """
+    @property
+    def reserved1(self) -> int:
         """
         placeholders for future updates or padding 
         """
     @property
-    def m_sReserved4(self) -> int:
+    def reserved4(self) -> int:
         """
         placeholders for future updates or padding 
         """
     @property
-    def m_sStationID(self) -> int:
+    def reserved5(self) -> int:
+        """
+        placeholders for future updates or padding formally: m_usReserved
+        """
+    @property
+    def reservedCharArr(self) -> list[int]:
+        """
+        placeholders for future software updates. Formally: m_cReserved
+        """
+    @property
+    def secCaptured(self) -> int:
+        """
+        Second in which first pulse in this specific coherent integration block was captured Formally: m_sSec
+        """
+    @property
+    def stationID(self) -> int:
         """
         network identification. 
         """
     @property
-    def m_sTotalNumberofBeams(self) -> int:
+    def totalPowerRadiated(self) -> float:
         """
-        Number of beams ST radars typically operate in DBS (Doppler Beam Swinging) mode, cycling through several beam directions (e.g., Zenith, North, East, South, West) to resolve the 3D wind vector.
-        """
-    @property
-    def m_sYear(self) -> int:
-        """
-        Timestamp in which first pulse in this specific coherent integration block was captured 
+        Total transmit power. 
         """
     @property
-    def m_ucExperimentDataEnable(self) -> int:
+    def window1EndHeight(self) -> float:
         """
-        Flag distinguishing between actual atmospheric measurement runs and internal hardware calibration/noise-floor sampling.
-        """
-    @property
-    def m_ulCodeA(self) -> list[int]:
-        """
-        The actual binary sequences used for phase modulation. Radars often use complementary code pairs (Code A and Code B) transmitted on alternating pulses to cancel out range sidelobes perfectly.
+        End of altitude boundaries (in km or meters) of 1st observation windows 
         """
     @property
-    def m_ulCodeB(self) -> list[int]:
+    def window1StartHeight(self) -> float:
         """
-        The actual binary sequences used for phase modulation. Radars often use complementary code pairs (Code A and Code B) transmitted on alternating pulses to cancel out range sidelobes perfectly.
-        """
-    @property
-    def m_usCodeLength(self) -> int:
-        """
-        number of bits in the phase code (e.g., 16-bit or 32-bit code).
+        Start of altitude boundaries (in km or meters) of 1st observation windows 
         """
     @property
-    def m_usReserved(self) -> int:
+    def window2EndHeight(self) -> float:
         """
-        placeholders for future updates or padding 
+        End of altitude boundaries (in km or meters) of 2st observation windows 
         """
     @property
-    def m_usWindowType(self) -> int:
+    def window2StartHeight(self) -> float:
         """
-        The mathematical window function (e.g., Hanning, Hamming, Blackman) applied to the time-domain data before the FFT to reduce spectral leakage.
+        Start of altitude boundaries (in km or meters) of 2st observation windows 
+        """
+    @property
+    def window3EndHeight(self) -> float:
+        """
+        End of altitude boundaries (in km or meters) of 3st observation windows 
+        """
+    @property
+    def window3StartHeight(self) -> float:
+        """
+        Start of altitude boundaries (in km or meters) of 3st observation windows 
+        """
+    @property
+    def window4EndHeight(self) -> float:
+        """
+        End of altitude boundaries (in km or meters) of 4st observation windows 
+        """
+    @property
+    def window4StartHeight(self) -> float:
+        """
+        Start of altitude boundaries (in km or meters) of 4st observation windows 
+        """
+    @property
+    def window5EndHeight(self) -> float:
+        """
+        End of altitude boundaries (in km or meters) of 5st observation windows 
+        """
+    @property
+    def window5StartHeight(self) -> float:
+        """
+        Start of altitude boundaries (in km or meters) of 5st observation windows 
+        """
+    @property
+    def windowType(self) -> int:
+        """
+        The mathematical window function (e.g., Hanning, Hamming, Blackman) applied to the time-domain data before the FFT to reduce spectral leakage. formally: m_usWindowType
+        """
+    @property
+    def yearCaptured(self) -> int:
+        """
+        Year in which this coherent integration block was captured 
         """
 def read_data(filepath: str) -> list[BeamObject]:
     """
-    Parses a .raw radar file and returns a list of BeamObjects
+    Takes .raw radar file path, parses it and returns a list of BeamObjects
     """

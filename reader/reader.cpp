@@ -9,33 +9,30 @@ vec<BeamObject> Read_data(const std::string& filepath) {
 		throw std::runtime_error("Failed to open file: " + filepath);
 	}
 
-	const int16_t DEFAULT_MAGIC_NUMBER = 369;
-	const size_t size_BeamConfig = 732;
-
 	vec<BeamObject> headers;
 	int16_t beam_count = 1;	 // Start with 1, update after reading the first header
-
+	printf("RawBeamHeader: %ld, BeamObj: %ld" ,sizeof(RawBeamHeader), sizeof(BeamObject));
 	for (int beam_No = 0; beam_No < beam_count; ++beam_No) {
 		BeamObject beamObj;
 
 		// Read the struct exactly as mapped
-		file.read(reinterpret_cast<char*>(&beamObj.cfg), sizeof(RawBeamHeader));
+		file.read(reinterpret_cast<char*>(&beamObj.header), sizeof(RawBeamHeader));
 
-		if (beamObj.cfg.m_sMagicNumber != DEFAULT_MAGIC_NUMBER) {
+		if (beamObj.header.fileMagicNumber != DEFAULT_MAGIC_NUMBER) {
 			throw std::runtime_error("Wrong File Selected: Invalid Magic Number.");
 		}
 
 		// MATLAB reads up to 1024 bytes for the full header block. We jump the remainder.
-		file.seekg(1024 - size_BeamConfig, std::ios::cur);
+		file.seekg(1024 - BEAM_HEADER_SIZE, std::ios::cur);
 
 		// Update beam_count dynamically from the first valid header read
-		beam_count = beamObj.cfg.m_sTotalNumberofBeams;
+		beam_count = beamObj.header.beamCount;
 
-		int16_t inCohIntegrations = beamObj.cfg.m_sNumOfInCohIntegrations;
+		int16_t inCohIntegrations = beamObj.header.inCohIntegrations;
 		if (inCohIntegrations <= 0) inCohIntegrations = 1;
 
-		int16_t nBins = beamObj.cfg.m_sNumOfRangeBins;
-		int16_t nFFT = beamObj.cfg.m_sNFFT;
+		int16_t nBins = beamObj.header.rangeBins;
+		int16_t nFFT = beamObj.header.FFTPoints;
 		size_t dataBlockSize = nBins * nFFT;
 
 		// Allocate 3D Data structure: [InCohIntegration][RangeBin][NFFT]
@@ -84,14 +81,14 @@ vec<BeamObject> Read_data(const std::string& filepath) {
 // Helper function to format and print the header
 void PrintHeaderSummary(std::ostream& os, const RawBeamHeader& header) {
 	// Use std::left and std::setw to align columns neatly
-	os << std::left << std::setw(25) << "Magic Number:" << header.m_sMagicNumber << "\n"
-	   << std::setw(25) << "Range Bins:" << header.m_sNumOfRangeBins << "\n"
-	   << std::setw(25) << "NFFT:" << header.m_sNFFT << "\n"
-	   << std::setw(25) << "Coh Integrations:" << header.m_sNumOfCohIntegrations << "\n"
-	   << std::setw(25) << "InCoh Integrations:" << header.m_sNumOfInCohIntegrations << "\n"
-	   << std::setw(25) << "Total Beams:" << header.m_sTotalNumberofBeams << "\n"
-	   << std::setw(25) << "Azimuth:" << header.m_fAzimuth << "\n"
-	   << std::setw(25) << "Off-Zenith:" << header.m_fOffZenith << "\n";
+	os << std::left << std::setw(25) << "Magic Number:" << header.fileMagicNumber << "\n"
+	   << std::setw(25) << "Range Bins:" << header.rangeBins << "\n"
+	   << std::setw(25) << "NFFT:" << header.FFTPoints << "\n"
+	   << std::setw(25) << "Coh Integrations:" << header.numOfCohIntegrations << "\n"
+	   << std::setw(25) << "InCoh Integrations:" << header.inCohIntegrations << "\n"
+	   << std::setw(25) << "Total Beams:" << header.beamCount << "\n"
+	   << std::setw(25) << "Azimuth:" << header.azimuth << "\n"
+	   << std::setw(25) << "Off-Zenith:" << header.offZenith << "\n";
 }
 
 // Dumps the object to a stream (console or file)
@@ -115,7 +112,7 @@ void DumpBeamObject(const BeamObject& beam, const std::string& filename = "") {
 	   << "           BEAM CONFIGURATION           \n"
 	   << "========================================\n";
 
-	PrintHeaderSummary(os, beam.cfg);
+	PrintHeaderSummary(os, beam.header);
 
 	os << "\n========================================\n"
 	   << "             DATA DIMENSIONS            \n"
@@ -142,26 +139,4 @@ void DumpBeamObject(const BeamObject& beam, const std::string& filename = "") {
 		}
 		std::cout << "Successfully dumped full data to " << filename << "\n";
 	}
-}
-
-int main() {
-	try {
-		std::string path =
-			"/home/roopesh/Projects/collage/Radar/workshop/Data_Hands_on/Mode_2/"
-			"EXP_DBS_CH4_01Jun2025_23_41_50.raw";
-		auto beams = Read_data(path);
-
-		for (size_t i = 0; i < beams.size(); ++i) {
-			// 1. Print summary to the console cleanly
-			DumpBeamObject(beams[i]);
-
-			// 2. Dump summary + full complex data matrix to a CSV-like file
-			std::string outFile = "beam_" + std::to_string(i) + "_output.txt";
-			DumpBeamObject(beams[i], outFile);
-		}
-	} catch (const std::exception& e) {
-		std::cerr << "Error: " << e.what() << "\n";
-	}
-
-	return 0;
 }
