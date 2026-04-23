@@ -1,0 +1,5 @@
+**/build/
+Data/*
+reader/*.so
+.vscode
+Read_rawfile.m
