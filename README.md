@@ -16,11 +16,12 @@ julia --project=. Run.jl
 ```
 
 ## Running Matlab
-run `run_script.m`
+run `matlab/run.m`
 
 ## Setup for Python+Cpp
 ### With bash:
-```bash 
+```bash
+cd python_cpp
 chmod +x setup.sh
 ./setup.sh
 ```
@@ -28,6 +29,7 @@ chmod +x setup.sh
 ### Manually:
 
 ```sh
+cd python_cpp
 cd "reader"
 python extract_docs.py
 python setup.py build_ext --inplace
@@ -40,4 +42,4 @@ pybind11-stubgen st_radar -o .
 ```
 
 ### Usage
-See `run.py`
+See `python_cpp/run.py`
