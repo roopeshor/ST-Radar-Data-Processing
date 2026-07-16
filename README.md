@@ -1,6 +1,13 @@
 # ST radar
 Reads ST Radar raw files and displays wind speeds in 5 directions (NEWS+Z).
-Implemented in Python+Cpp, Julia and MATLAB
+Implemented in Python+Cpp, Julia and MATLAB.
+While running, each scripts assume that a `Data` folder is sitting just next to it:
+```
+├── run.[m/py/jl]
+├── Data
+│   ├── Mode_1
+│   │   ├── *.raw
+```
 
 ## Running Julia:
 ```bash 

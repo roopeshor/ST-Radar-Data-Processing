@@ -5,7 +5,7 @@ using .Proc
 using .Proc.Reader
 
 function main()
-    folder = "../Data/Mode_1"
+    folder = "Data/Mode_1"
     # Find all .raw files
     # Note: Using readdir if Glob is not installed, or simply just path manipulation
     raws = filter(x -> endswith(x, ".raw"), readdir(folder, join=true))

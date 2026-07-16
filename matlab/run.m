@@ -1,8 +1,7 @@
 % run_script.m
 % Front end script to find data, read it, process and visualize.
 
-folder = './Data/Mode_1';
-raws = dir(fullfile(folder, '*.raw'));
+raws = dir(fullfile('Data', 'Mode_1' , '*.raw'));
 
 if isempty(raws)
     disp('No raw files found.');
