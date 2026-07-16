@@ -37,4 +37,4 @@ def generate_docs(header_path, output_path):
         
         out.write("#endif")
 if __name__ == "__main__":
-    generate_docs("reader.hpp", "auto_docs.hpp")
+    generate_docs("definitions.hpp", "auto_docs.hpp")

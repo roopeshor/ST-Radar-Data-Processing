@@ -13,9 +13,24 @@ class BeamObject:
         Beam Data Dimensions: [inCohIntegrations][rangeBins][FFTPoints]
         """
     @property
+    def direction(self) -> str:
+        """
+        Directinon in which beam is aligned Possible values: Vertical - North - West - South - East - Unknown
+        """
+    @property
     def header(self) -> RawBeamHeader:
         """
         Beam Header data
+        """
+    @property
+    def maxVelocity(self) -> float:
+        """
+        Maximum Unambiguous Doppler Velocity / Nyquist velocity. If the wind blows faster than this limit, the signal aliases over to the opposite side of the spectrum It is given by: wavelength / (4 Teff), where Teff is effective time between each samples: Teff =  IPP * numOfCohIntegrations
+        """
+    @property
+    def rangeResolution(self) -> float:
+        """
+        Resolution of each height. The radar pulse has to travel to the target and bounce back, this creates the minimum resolvable range. Range Resolution (ΔR) is: c * pulseDuration / 2
         """
 class RawBeamHeader:
     """
@@ -29,7 +44,7 @@ class RawBeamHeader:
     @property
     def IIP_us(self) -> float:
         """
-        (IPP): Inter-Pulse Period. The time between consecutive transmitted pulses. It determines the maximum unambiguous range (Rmax​=c⋅IPP/2) and the maximum measurable Doppler velocity (Nyquist limit). Formally: m_fIntrPulsePeriod_us
+        (IPP): Inter-Pulse Period (in microseconds). The time between consecutive transmitted pulses. It determines the maximum unambiguous range (Rmax​=c⋅IPP/2) and the maximum measurable Doppler velocity (Nyquist limit). Formally: m_fIntrPulsePeriod_us
         """
     @property
     def MGC_Gain_dB(self) -> float:
@@ -49,7 +64,7 @@ class RawBeamHeader:
     @property
     def TRP_RF_Delay_us(self) -> float:
         """
-        Transmit/Receive Path Delay. The internal hardware time it takes for the signal to travel through cables, T/R switches, and filters. This must be subtracted from the time-of-flight to accurately calculate "Altitude Zero".
+        Transmit/Receive Path Delay in microseconds. The internal hardware time it takes for the signal to travel through cables, T/R switches, and filters. This must be subtracted from the time-of-flight to accurately calculate "Altitude Zero".
         """
     @property
     def altitude(self) -> float:
@@ -64,7 +79,7 @@ class RawBeamHeader:
     @property
     def baudLength_us(self) -> float:
         """
-        If the pulse is phase-coded (compressed), the pulse is divided into smaller "bauds" or "chips". The baud length dictates the actual range resolution (ΔR=c⋅baud/2), while the longer total pulse width maintains high average power.
+        If the pulse is phase-coded (compressed), the pulse is divided into smaller "bauds" or "chips". The baud length dictates the actual range resolution in microseconds (ΔR=c⋅baud/2), while the longer total pulse width maintains high average power.
         """
     @property
     def beamCount(self) -> int:
@@ -75,6 +90,11 @@ class RawBeamHeader:
     def clusterWiseRadiatedPower(self) -> list[float]:
         """
         The ACARR radar array is divided into sub-arrays or "clusters" of antennas. This array tracks the power output of each specific hardware cluster for diagnostics and beam-forming calibration. formally: m_fRadiatedPower_ClusterWise
+        """
+    @property
+    def codeFlag(self) -> int:
+        """
+        A boolean/integer flag indicating whether phase coding (pulse compression) is enabled. Formally: m_sCodeFlag
         """
     @property
     def codeLength(self) -> int:
@@ -152,14 +172,9 @@ class RawBeamHeader:
         Identifier for the operational mode (e.g., DBS wind profiling, spaced-antenna drift, meteor tracking).
         """
     @property
-    def phaseCodingEnabled(self) -> int:
-        """
-        A boolean/integer flag indicating whether phase coding (pulse compression) is enabled. Formally: m_sCodeFlag
-        """
-    @property
     def pulseWidth_us(self) -> float:
         """
-        The total duration of the transmitted RF pulse. Dictates the total transmitted energy. formally:  m_fPulseWidth_us
+        The total duration of the transmitted RF pulse in microseconds. Dictates the total transmitted energy. formally:  m_fPulseWidth_us
         """
     @property
     def rangeBins(self) -> int:

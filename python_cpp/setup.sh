@@ -4,7 +4,7 @@ rm "build" ./*.so st_radar.pyi auto_docs.hpp -r
 python extract_docs.py
 python setup.py build_ext --inplace
 
-read -p "Install type hintes [y/n]?" yn
+read -p "Install type hintes [Y/n]?" yn
 case $yn in
     Y | y | "" )
         if python3 -c "import pybind11_stubgen" &> /dev/null; then

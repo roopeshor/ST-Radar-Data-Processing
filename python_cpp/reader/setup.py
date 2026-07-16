@@ -8,7 +8,7 @@ from setuptools import setup
 try:
     subprocess.check_call([sys.executable, "extract_docs.py"])
 except subprocess.CalledProcessError:
-    print("Warning: Failed to generate auto_docs.hpp. Make sure reader.hpp exists.")
+    print("Warning: Failed to generate auto_docs.hpp. Make sure definitions.hpp exists.")
 
 # 2. Proceed with standard compilation
 ext_modules = [

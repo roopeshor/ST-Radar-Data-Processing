@@ -9,7 +9,11 @@
 
 template <typename T>
 using vec = std::vector<T>;
-typedef std::complex<int32_t> complex;
+
+using complex32 = std::complex<int32_t> ;
+using ComplexDouble = std::complex<double> ;
+using RadarCube = vec<vec<vec<ComplexDouble>>>;	 // [InCoh][RangeBins][NFFT]
+using PowerSpectrum = vec<vec<double>>;			 // [RangeBins][NFFT]
 
 const int16_t DEFAULT_MAGIC_NUMBER = 369;
 const size_t BEAM_HEADER_SIZE = 732;
@@ -27,7 +31,7 @@ struct RawBeamHeader {
 
 	/**
 	 * If the pulse is phase-coded (compressed), the pulse is divided into smaller
-	 * "bauds" or "chips". The baud length dictates the actual range resolution
+	 * "bauds" or "chips". The baud length dictates the actual range resolution in microseconds
 	 * (ΔR=c⋅baud/2), while the longer total pulse width maintains high average power.
 	 */
 	float baudLength_us;
@@ -59,10 +63,10 @@ struct RawBeamHeader {
 	 * enabled.
 	 * Formally: m_sCodeFlag
 	 */
-	int16_t phaseCodingEnabled;
+	int16_t codeFlag;
 
 	/**
-	 * (IPP): Inter-Pulse Period. The time between consecutive transmitted pulses.
+	 * (IPP): Inter-Pulse Period (in microseconds). The time between consecutive transmitted pulses.
 	 * It determines the maximum unambiguous range (Rmax​=c⋅IPP/2) and the maximum
 	 * measurable Doppler velocity (Nyquist limit).
 	 * Formally: m_fIntrPulsePeriod_us
@@ -70,9 +74,8 @@ struct RawBeamHeader {
 	float IIP_us;
 
 	/**
-	 * The total duration of the transmitted RF pulse. Dictates the total transmitted
-	 * energy.
-	 * formally:  m_fPulseWidth_us
+	 * The total duration of the transmitted RF pulse in microseconds. Dictates the total
+	 * transmitted energy. formally:  m_fPulseWidth_us
 	 */
 	float pulseWidth_us;
 
@@ -174,8 +177,8 @@ struct RawBeamHeader {
 	int8_t comment[16];
 
 	/**
-	 * Transmit/Receive Path Delay. The internal hardware time it takes for the signal to
-	 * travel through cables, T/R switches, and filters. This must be subtracted from the
+	 * Transmit/Receive Path Delay in microseconds. The internal hardware time it takes for the
+	 * signal to travel through cables, T/R switches, and filters. This must be subtracted from the
 	 * time-of-flight to accurately calculate "Altitude Zero".
 	 */
 	float TRP_RF_Delay_us;
@@ -279,16 +282,43 @@ struct RawBeamHeader {
  * Extended structure to hold both header and the 3D data block
  */
 struct BeamObject {
-	
 	/** Beam Header data */
 	RawBeamHeader header;
 	/**
 	 * Beam Data
 	 * Dimensions: [inCohIntegrations][rangeBins][FFTPoints]
 	 */
-	vec<vec<vec<complex>>> BeamData;
+	vec<vec<vec<complex32>>> BeamData;
+
+	/**
+	 * Resolution of each height. The radar pulse has to travel to the target and bounce back, this
+	 * creates the minimum resolvable range. Range Resolution (ΔR) is: c * pulseDuration / 2
+	 */
+	float rangeResolution;
+
+	/**
+	 * Maximum Unambiguous Doppler Velocity / Nyquist velocity. If the wind blows faster than this
+	 * limit, the signal aliases over to the opposite side of the spectrum
+	 * It is given by: wavelength / (4 Teff), where Teff is effective time between each samples:
+	 * Teff =  IPP * numOfCohIntegrations
+	 */
+	float maxVelocity;
+
+	/**
+	 * Directinon in which beam is aligned
+	 * Possible values:
+	 * Vertical
+	 * - North
+	 * - West
+	 * - South
+	 * - East
+	 * - Unknown
+	 */
+	std::string direction;
 };
 
 vec<BeamObject> Read_data(const std::string& filepath);
+float getRangeResolution(RawBeamHeader beamHeader);
+std::string getBeamDirection(int azimuth, float offZenith);
 
 #endif

@@ -3,7 +3,7 @@
 #include <pybind11/stl.h>
 
 #include "auto_docs.hpp"
-#include "reader.hpp"
+#include "definitions.hpp"
 namespace py = pybind11;
 
 PYBIND11_MODULE(st_radar, m) {
@@ -16,7 +16,7 @@ PYBIND11_MODULE(st_radar, m) {
 		.def_readonly("FFTPoints", &RawBeamHeader::FFTPoints, DOC_FFTPoints)
 		.def_readonly("numOfCohIntegrations", &RawBeamHeader::numOfCohIntegrations, DOC_numOfCohIntegrations)
 		.def_readonly("inCohIntegrations", &RawBeamHeader::inCohIntegrations, DOC_inCohIntegrations)
-		.def_readonly("phaseCodingEnabled", &RawBeamHeader::phaseCodingEnabled, DOC_phaseCodingEnabled)
+		.def_readonly("codeFlag", &RawBeamHeader::codeFlag, DOC_codeFlag)
 		.def_readonly("IIP_us", &RawBeamHeader::IIP_us, DOC_IIP_us)
 		.def_readonly("pulseWidth_us", &RawBeamHeader::pulseWidth_us, DOC_pulseWidth_us)
 		.def_readonly("numOfObservedWindows", &RawBeamHeader::numOfObservedWindows, DOC_numOfObservedWindows)
@@ -95,8 +95,11 @@ PYBIND11_MODULE(st_radar, m) {
 						   "Extended structure to hold both header and the 3D data block")
 		.def_readonly("header", &BeamObject::header, "Beam Header data")
 		// Automatically converts to nested Python lists
-		.def_readonly("BeamData", &BeamObject::BeamData, DOC_BeamData);
-
+		.def_readonly("BeamData", &BeamObject::BeamData, DOC_BeamData)
+		.def_readonly("rangeResolution", &BeamObject::rangeResolution, DOC_rangeResolution)
+		.def_readonly("maxVelocity", &BeamObject::maxVelocity, DOC_maxVelocity)
+		.def_readonly("direction", &BeamObject::direction, DOC_direction);
+		
 	m.def("read_data", &Read_data,
 		  "Takes .raw radar file path, parses it and returns a list of BeamObjects",
 		  py::arg("filepath"));	 // Pull in your structs and function declaration

@@ -1,6 +1,6 @@
 **/build/
 Data/*
-reader/*.so
+**/*.so
 .vscode
-Read_rawfile.m
 **/__pycache__
+**/*.bin
