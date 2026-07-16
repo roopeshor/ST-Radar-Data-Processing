@@ -16,10 +16,10 @@ dat = Read_data(filepath);
 
 % Reorder beams to match Python
 beams = [
-    dat(2),
-    dat(3),
-    dat(1),
-    dat(4),
+    dat(2)
+    dat(3)
+    dat(1)
+    dat(4)
     dat(5)
 ];
 
